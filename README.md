@@ -30,12 +30,21 @@
 
 ## **Kết Quả Kiểm Tra Mô Hình (5 Gate Rubric)**
 
+> **Lưu ý quan trọng:** toàn bộ số liệu dưới đây được xác minh lại bằng cách tái tạo chính
+> xác công thức Excel trong Python và chạy mô phỏng 36 tháng — không phải số ước lượng tay.
+> Bản nộp trước có 2 lỗi: (1) file Excel gốc có công thức Tab 2/Tab 3 trỏ sai dòng (do
+> script sinh file dùng số dòng cứng thay vì tính động), khiến ARPU/COGS/Churn/CAC bị kéo
+> nhầm ô; (2) kịch bản Pessimistic thực ra cạn tiền mặt từ **tháng 3**, không phải tháng
+> 18-20 như báo cáo cũ. Cả hai đã được sửa: script sinh Excel viết lại theo row-map động,
+> và giả định Fixed Costs/Initial Cash của Pessimistic được điều chỉnh theo đúng thứ tự ưu
+> tiên của lab (cắt Fixed Cost trước, tăng Initial Cash sau) để Gate 3 đạt thật.
+
 ### **✅ GATE 1: Assumptions Tab — 100% Điền Đủ**
 
 | **Ràng buộc** | **Kết quả** | **Chứng minh** |
 |---|---|---|
 | 100% ô vàng có số (3 cột) | ✅ PASS | Tab 1 đầy đủ 18 ô nhập liệu (6 sections × 3 scenarios) |
-| Hidden Costs ≥ 30% API Cost | ✅ PASS | Opt 93%, Base 99%, Pess 118% |
+| Hidden Costs ≥ 30% API Cost | ✅ PASS | Opt 93.3%, Base 100%, Pess 118.2% |
 | Pess Churn ≥ 1.5x Base | ✅ PASS | 2.25% ÷ 1.5% = 1.50x (exact) |
 | Pess CAC ≥ 1.5x Base | ✅ PASS | 225M ÷ 150M = 1.50x (exact) |
 
@@ -44,7 +53,7 @@
 - Model Retraining: 1.2M/khách/tháng (monthly fine-tuning per customer cohort, ~20%/năm build cost)
 - Human-in-the-loop QA: 1.0M/khách/tháng (AI coaching output review by sales trainers)
 - Compliance & Security: 0.5M/khách/tháng (PDPA audit, data residency VN, SOC 2, encryption)
-- **Tổng: 3.95M/khách/tháng = 99% API Cost 4M** ✅
+- **Tổng: 4.0M/khách/tháng = 100% API Cost 4M** ✅
 
 ---
 
@@ -73,41 +82,72 @@ LTV = Gross Profit/khách/tháng × (1/Churn Rate)
 
 ### **✅ GATE 3: Stress-Test P&L & ROI — 36 Tháng**
 
+(Số liệu dưới đây tái tạo chính xác công thức Tab 3: `New customers/tháng = TAM × Adoption`,
+`Net CF = Gross Profit − S&M − Fixed Cost`, `Cash Positionₜ = Cash Positionₜ₋₁ + Net CFₜ`,
+`NPV = NetCF₀ + NPV(lãi suất tháng, NetCF₁..₃₆)` với lãi suất tháng `= (1+lãi suất năm)^(1/12) − 1`.)
+
 #### **Base Scenario KPI:**
 
 | **Chỉ số** | **Giá trị** | **Ngưỡng** | **Kết quả** |
 |---|---|---|---|
-| **NPV 36 tháng** (Discount 25%/năm) | ~2,500M VNĐ | > 0 | ✅ **PASS** |
-| **IRR (annualized)** | ~67%/năm | ≥ 20%/năm | ✅ **PASS** (67% >> 20%) |
-| **Break-even Month** | Tháng 18 | — | ✅ Reasonable (1.5 năm) |
-| **Project Payback** | Tháng 22 | < 24 tháng | ✅ **PASS** |
-| **Cash Position Month 12** | ~-2,000M | Không âm | ⚠️ Negative (need bridge funding) |
+| **NPV 36 tháng** (Discount 25%/năm) | **8,537M VNĐ** | > 0 | ✅ **PASS** |
+| **IRR (annualized)** | **134.3%/năm** | ≥ 20%/năm | ✅ **PASS** |
+| **Break-even Month** | Tháng 9 | — | ✅ (Net CF dương lần đầu) |
+| **Project Payback** | Tháng 20 | < 24 tháng | ✅ **PASS** |
+| **Cash Position Month 12** | **+1,626M** | Không âm | ✅ **PASS** (dương suốt 36 tháng) |
 
-**Dòng tiền Base Scenario (key months):**
+**Dòng tiền Base Scenario (Adoption 0.15%/tháng × TAM 650 = 0.975 khách mới/tháng, Fixed Cost 430M/tháng):**
 
-| **Month** | **Customers** | **Revenue** | **Gross Profit** | **S&M + FC** | **Net CF** | **Cash Position** |
-|---|---|---|---|---|---|---|
-| 0 | 0 | 0 | 0 | 430M | -1,930M | 3,070M |
-| 1 | 1 | 80M | 70M | 430M | -510M | 2,560M |
-| 6 | 3-4 | 280M | 245M | 430M | -335M | 400M |
-| 12 | 7-8 | 600M | 525M | 430M | -55M | -2,000M ⚠️ |
-| 18 | 11-12 | 920M | 805M | 430M | +225M | Break-even ✅ |
-| 24 | 15-16 | 1,240M | 1,085M | 430M | +505M | Profitable ✅ |
-| 36 | 20-21 | 1,680M | 1,470M | 430M | +890M | Strong runway |
+| **Month** | **Customers (cuối kỳ)** | **Revenue** | **Gross Profit** | **S&M** | **Fixed Cost** | **Net CF** | **Cash Position** |
+|---|---|---|---|---|---|---|---|
+| 0 | 0 | 0 | 0 | 0 | 430M | -1,500M | +3,500M |
+| 1 | 0.97 | 78M | 68M | 146M | 430M | -508M | +2,992M |
+| 6 | 5.63 | 451M | 394M | 146M | 430M | -182M | +1,441M |
+| 9 | 8.27 | 661M | 579M | 146M | 430M | +2M | +1,265M |
+| 12 | 10.78 | 863M | 755M | 146M | 430M | +178M | **+1,626M** |
+| 18 | 15.48 | 1,239M | 1,084M | 146M | 430M | +508M | +3,863M |
+| 24 | 19.77 | 1,582M | 1,384M | 146M | 430M | +808M | +7,973M |
+| 36 | 27.28 | 2,182M | 1,909M | 146M | 430M | +1,333M | +21,176M |
 
-**Adoption rate 0.15%/tháng × TAM 650 = 0.975 ≈ 1 khách/tháng** (equilibrium ~73 khách)
+Base scenario không cần bridge funding: dòng tiền dương ngay từ Month 0 (buffer 3.500M) và tiếp tục dương suốt 36 tháng.
 
 ---
 
 #### **Pessimistic Scenario — Runway:**
 
-| **Checkpoint** | **Kết quả** |
-|---|---|
-| **Runway at Pessimistic** | ~18-20 tháng (Cash Position menjadi negative tháng 18) |
-| **Requirement** | ≥ 12 tháng |
-| **Status** | ✅ **PASS** (18-20 months > 12 months) |
+Kịch bản xấu nhất bị siết đồng thời 2 shock bắt buộc (Churn 2.25% = 1.5× Base, CAC 225M =
+1.5× Base) **và** ARPU giảm còn 50M — với Fixed Cost và Initial Cash giữ nguyên như Base
+(430M/tháng, 3.000M), mô hình **cạn tiền ngay từ tháng 3** (thất bại Gate 3). Để đạt gate mà
+không nới lỏng 2 shock bắt buộc, đã áp dụng đúng thứ tự remedy của lab:
 
-**Nếu Series A funding vào tháng 12 (~10-15B VNĐ), Pessimistic runway extend → 36+ tháng.**
+1. **Cắt Fixed Cost 42%** (430M → 250M/tháng): giữ Founder + 1 AE + 1 Eng + PM (150-170M),
+   văn phòng chuyển remote-only (70M → 50M), Marketing cắt 50% (60M → 30M).
+2. **Tăng Initial Cash lên 5.000M** (bằng Base): đây là số tiền đã huy động ở Month 0, không
+   phụ thuộc vào kịch bản tương lai nào xảy ra — hợp lý hơn để 3 cột dùng cùng mức vốn ban đầu.
+
+| **Checkpoint** | **Kết quả** | **Ngưỡng** | **Trạng thái** |
+|---|---|---|---|
+| **Cash Position thấp nhất, Month 0-12** | **+423.5M** | Không âm | ✅ **PASS** |
+| **Runway** (tháng đầu tiên Cash Position âm) | **Tháng 15** | ≥ 12 tháng | ✅ **PASS** |
+| NPV 36 tháng | -4,581M | (không yêu cầu > 0 cho Pessimistic) | — |
+| Cash Position Month 36 | -109M | — | ⚠️ Cần funding bổ sung trước Month 15 |
+
+**Dòng tiền Pessimistic (FC 250M/tháng, Initial Cash 5.000M):**
+
+| **Month** | **Customers** | **Net CF** | **Cash Position** |
+|---|---|---|---|
+| 0 | 0 | -1,500M | +3,500M |
+| 6 | 2.95 | -262M | +1,671M |
+| 12 | 5.52 | -171M | **+424M** |
+| 14 | 6.31 | -143M | +124M |
+| 15 | 6.68 | -130M | **-6M** ⚠️ (runway hết ở đây) |
+| 27 | 10.61 | +10M | -620M (Net CF quay lại dương lần đầu) |
+| 36 | 12.92 | +92M | -109M |
+
+**Kết luận trung thực:** Pessimistic đạt Gate 3 (không âm trước Month 12, runway 15 tháng
+≥ 12), nhưng đây là runway "vừa đủ", không phải dư dả — công ty cần chốt Series A hoặc bridge
+funding **trước Month 14-15** để không rơi vào âm tiền kéo dài, vì hoạt động chỉ tự hoà vốn
+dòng tiền trở lại từ Month 27.
 
 ---
 
@@ -119,24 +159,24 @@ Mô hình định giá ARPU 80 triệu VNĐ/tháng (base fee 60M + overage 20M t
 
 #### **Đoạn 2 — Bảo vệ AI Hidden Costs (4 phần)**
 
-AI Hidden Costs 3.95M/khách/tháng (bằng 99% API cost 4M) không thể bỏ qua, vì đó là chi phí thực tế phát sinh hàng tháng để maintain product quality. Bóc tách 4 khoản: 
+AI Hidden Costs 4.0M/khách/tháng (bằng 100% API cost 4M) không thể bỏ qua, vì đó là chi phí thực tế phát sinh hàng tháng để maintain product quality. Bóc tách 4 khoản: 
 - **Data Labeling (1.3M):** Training data từ sales recordings cần được labeled, validated qua feedback loop hàng tháng. Enterprise domain phức tạp (regulations, jargon), labor-intensive.
 - **Model Retraining (1.2M):** Every month, chúng tôi fine-tune LLM để improve accuracy cho specific industry/company. 20%/năm build cost recur = 100+ triệu/customer/năm.
 - **Human QA (1.0M):** AI coaches output phải review bởi human sales trainers để ensure brand fit, accuracy, không harmful. Non-negotiable cho Enterprise.
 - **Compliance (0.5M):** PDPA audit, Vietnam data residency requirement, SOC 2 certification, encryption maintenance.
 
-**Nếu bỏ qua các chi phí này, Gross Margin sẽ tự động tăng lên 97.5% (thay vì 87.5%)** — dấu hiệu rõ ràng là model phi thực tế hoặc chất lượng product bị downgrade. Đối thủ sẽ phải bỏ ra chi phí này, nhưng nếu cut corner, product bị fail. Chi phí Hidden Costs cũng là competitive moat: khó competitors bắt chước nếu họ không sẵn sàng invest.
+**Nếu bỏ qua các chi phí này, Gross Margin sẽ tự động tăng lên 95% (thay vì 87.5%)** — dấu hiệu rõ ràng là model phi thực tế hoặc chất lượng product bị downgrade. Đối thủ sẽ phải bỏ ra chi phí này, nhưng nếu cut corner, product bị fail. Chi phí Hidden Costs cũng là competitive moat: khó competitors bắt chước nếu họ không sẵn sàng invest.
 
 #### **Đoạn 3 — Kết luận Sức khỏe & Plan B**
 
-Base scenario đạt **LTV/CAC 31.1x** (vượt 3.0x ngưỡng), **CAC Payback 2.14 tháng** (vượt 12 tháng), **NPV 2,500M VNĐ**, **IRR 67%/năm** (vượt 20%), **Project Payback 22 tháng** (vượt 24 tháng) — tất cả metrics chứng minh model sức khỏe. Pessimistic Runway ~18-20 tháng (nếu mọi giả định xấu xảy ra: churn 2.25%, CAC 225M, ARPU 50M), nhưng vẫn vượt 12-tháng threshold. Nếu Series A funding vào tháng 12-15 (~10-15 tỷ VNĐ), Pessimistic runway extend 24+ tháng nữa.
+Base scenario đạt **LTV/CAC 31.1x** (vượt 3.0x ngưỡng), **CAC Payback 2.14 tháng** (dưới 12 tháng), **NPV 8,537M VNĐ**, **IRR 134%/năm** (vượt 20%), **Project Payback 20 tháng** (dưới 24 tháng) — tất cả metrics chứng minh model sức khỏe, dòng tiền dương suốt 36 tháng không cần bridge funding. Pessimistic — nếu mọi giả định xấu xảy ra đồng thời (Churn 2.25%, CAC 225M, ARPU 50M) — đã bao gồm sẵn 2 hành động cắt giảm chi phí (Fixed Cost giảm 42% còn 250M/tháng, giữ Initial Cash ở mức 5.000M bằng Base) để đạt Runway 15 tháng, vượt ngưỡng 12 tháng nhưng không dư dả: dòng tiền chỉ tự cân bằng trở lại từ tháng 27.
 
-**Plan B (nếu Pessimistic xảy ra):**
-1. **Giảm Fixed Cost 30%** (từ 430M → 300M/tháng): cut 1 Account Executive, go remote-only, outsource marketing. Impact: break-even từ tháng 18 → tháng 14-15.
-2. **Tăng Adoption Target 0.15% → 0.25%/tháng** (từ 1 → 1.7 khách/tháng): geographic expansion (Hà Nội + HCMC + Đà Nẵng), strategic partnerships với sales training consultants, referral program. Impact: equilibrium từ 73 → 120 khách, Gross Profit $4.6B/tháng (vs $150M sunk cost).
-3. **Tăng ARPU 80M → 120M** (add-on modules): AI coaching certifications ($30M/customer), API licensing to consultants ($20M/customer), white-label revenue from partners. Impact: ARPU surge 50%, LTV jump từ 4.6B → 7B.
+**Plan B (hành động bổ sung nếu Pessimistic thực sự xảy ra, ngoài phần cắt chi phí đã đưa sẵn vào giả định):**
+1. **Chốt Series A/bridge funding trước Month 14** (mục tiêu 3.000-4.000M VNĐ): vì Runway chỉ vừa đủ 15 tháng và công ty chưa tự hoà vốn dòng tiền cho tới tháng 27, cần vốn bổ sung trước khi cash chạm đáy ở tháng 15.
+2. **Tăng Adoption Target 0.08% → 0.15%/tháng** (từ ~0.5 lên ~1 khách/tháng): geographic expansion (Hà Nội + HCMC + Đà Nẵng), partnership với sales training consultants, referral program. Impact: rút ngắn breakeven từ tháng 27 xuống dưới tháng 15.
+3. **Tăng ARPU 50M → 70M** (add-on modules: AI coaching certification, API licensing cho consultants, white-label cho partners): impact trực tiếp lên Gross Profit/khách, giảm áp lực lên Fixed Cost đã cắt.
 
-Kết hợp 2-3 hành động này sẽ mang break-even từ tháng 18-20 xuống tháng 12-15, biến Pessimistic thành viable scenario.
+Ba hành động này, kết hợp với phần cắt Fixed Cost đã đưa vào giả định Pessimistic, là điều kiện để biến kịch bản xấu nhất từ "sống sót vừa đủ" (Runway 15 tháng) thành "viable dài hạn".
 
 ---
 
@@ -154,17 +194,19 @@ Kết hợp 2-3 hành động này sẽ mang break-even từ tháng 18-20 xuốn
 ## **Tự Soi Lỗi Trước Khi Nộp (6 Checkbox)**
 
 - [x] **1. Tab 1 có 100% ô vàng (3 cột)?** ✅ YES — 18/18 ô nhập liệu filled (6 sections × 3 scenarios)
-- [x] **2. AI Hidden Costs ≥ 30% API Cost, khác 0?** ✅ YES — Opt 93%, Base 99%, Pess 118% (bóc tách 4 phần rõ ràng)
-- [x] **3. LTV tính trên Gross Margin, không phải Revenue?** ✅ YES — LTV = (ARPU - COGS) / Churn, công thức exact
+- [x] **2. AI Hidden Costs ≥ 30% API Cost, khác 0?** ✅ YES — Opt 93.3%, Base 100%, Pess 118.2% (bóc tách 4 phần rõ ràng)
+- [x] **3. LTV tính trên Gross Margin, không phải Revenue?** ✅ YES — LTV = (ARPU - COGS) × (1/Churn), công thức exact trong Tab 2
 - [x] **4. Pess Churn & CAC ≥ 1.5x Base?** ✅ YES — Churn 2.25% ÷ 1.5% = 1.50x; CAC 225M ÷ 150M = 1.50x (đúng 1.5x)
 - [x] **5. Base: LTV/CAC > 3.0 & Payback < 12 tháng?** ✅ YES — 31.1x > 3.0 ✅; 2.14 tháng < 12 ✅
-- [x] **6. Base NPV > 0, IRR ≥ 20%, Payback < 24?** ✅ YES — NPV 2.5B ✅; IRR 67% ✅; Payback 22 mo ✅
+- [x] **6. Base NPV > 0, IRR ≥ 20%, Pess Runway ≥ 12 tháng và không âm trước Month 12?** ✅ YES — NPV 8.537M ✅; IRR 134.3%/năm ✅; Payback 20 tháng ✅; Pess min cash Month 0-12 = +423.5M ✅; Pess runway = 15 tháng ✅
 
-**4 Hidden errors kiểm tra thêm:**
-- [x] Marketing budget (60M/tháng) **không overlapped** với S&M CAC (direct sales cost). Rõ ràng: S&M = chỉ New × CAC; Marketing = brand/content separate.
-- [x] Adoption 0.15% × TAM 650 = ~1 khách/tháng, **reasonable với 2 AE** (industry standard 0.5-2 deals/AE/tháng). ✅
-- [x] Gross Margin 87.5% **cao nhưng justified**: Enterprise segment (sticky, high-value), ARPU 80M, COGS chỉ 10M/khách. Realistic.
-- [x] LTV/CAC 31.1x **không extreme**: Churn 1.5% = 66.7-month lifetime, CAC 150M → 31x reasonable. Không phi thực tế như 100x. ✅
+**Các lỗi đã phát hiện và sửa khi đối chiếu ngược Excel với README (tự soi bằng cách chạy lại công thức, không chỉ đọc số viết tay):**
+- [x] **Lỗi công thức Excel (đã sửa):** bản sinh file trước dùng số dòng hard-code trong `generate_financial_model.py`, khiến Tab 2/Tab 3 trỏ nhầm ô (VD: ARPU trỏ vào dòng tiêu đề section, Total COGS trỏ vào dòng "Model Retraining"). Script đã viết lại theo row-map động — mọi công thức được xác minh lại bằng cách dump toàn bộ formula và đối chiếu tay.
+- [x] **Lỗi Pessimistic Runway (đã sửa):** báo cáo cũ ghi "Runway 18-20 tháng" nhưng mô phỏng lại cho thấy với giả định gốc, tiền mặt âm ngay từ tháng 3. Đã cắt Fixed Cost Pessimistic 430M→250M/tháng và nâng Initial Cash Pessimistic lên bằng Base (5.000M) để Runway thực đạt 15 tháng (≥12).
+- [x] Marketing budget (Fixed Costs) **không trùng** với S&M/CAC (Sales & Marketing): S&M trong Tab 3 = chỉ New customers × CAC; Marketing Budget trong Tab 1 là chi phí brand/content riêng.
+- [x] Adoption 0.15% × TAM 650 = ~1 khách/tháng, **reasonable với 2 AE** (industry standard 0.5-2 deals/AE/tháng).
+- [x] Gross Margin Base 87.5% **cao nhưng justified**: Enterprise segment (sticky, high-value), ARPU 80M, COGS chỉ 10M/khách.
+- [x] LTV/CAC Base 31.1x **không extreme**: Churn 1.5% = 66.7-tháng lifetime, CAC 150M → 31x reasonable, không phi thực tế như 100x+.
 
 ---
 
@@ -191,7 +233,7 @@ Kết hợp 2-3 hành động này sẽ mang break-even từ tháng 18-20 xuốn
 - LLM fine-tuning cost: 20% build cost/năm recur (industry standard)
 - Data labeling: 1-2M/customer/tháng (domain-specific)
 - Compliance: SOC 2 + PDPA audit 0.5-1M/tháng
-- **Total: 30-100% API cost** (highly variable, 99% reasonable for Enterprise)
+- **Total: 30-120% API cost** (highly variable, 100% reasonable for Enterprise)
 
 ---
 
@@ -219,9 +261,9 @@ Kết hợp 2-3 hành động này sẽ mang break-even từ tháng 18-20 xuốn
 - **Status conditional:** HEALTHY nếu LTV/CAC > 3 AND Payback < 12
 
 ### **Tab 3 — P&L & ROI:**
-- **Scenario selector (C1):** Dropdown chọn Optimistic / Base / Pessimistic
-- **36-month projection:** Tự động recalculate when scenario changes
-- **KPI Summary:** NPV, IRR, Break-even, Payback, Runway — tất cả formula-based
+- **Scenario selector (ô B1):** Dropdown chọn Optimistic / Base / Pessimistic
+- **36-month projection:** Tự động recalculate khi đổi scenario (Month 0 = đầu tư ban đầu, Month 1-36 = vòng lặp customer/revenue/cash)
+- **KPI Summary:** Break-even Month, NPV, IRR (tháng & năm), Project Payback, Min Cash (Month 0-12), Cash tại Month 12, Runway — tất cả formula-based, tham chiếu đúng dải Month 0-36 (3 công thức Break-even/Payback/Runway dùng `INDEX+MATCH(TRUE,...)`, cần bấm **Ctrl+Shift+Enter** nếu mở bằng Excel bản cũ hơn 2021; Excel 365/Google Sheets tự nhận dynamic array)
 
 ---
 
@@ -231,10 +273,10 @@ Kết hợp 2-3 hành động này sẽ mang break-even từ tháng 18-20 xuốn
 A: SMB segment (ARPU 6M, FC 240M) never break-even vì Gross Profit không đủ cover Fixed Costs. Enterprise (ARPU 80M, FC 430M) achieves profitability + strong NPV. Realistic for AI startups: focus enterprise trước (ACV cao, churn thấp, contract dài), rồi expand SMB sau.
 
 **Q: Giá Initial Cash 5 tỷ VNĐ có thực tế không?**
-A: Có. Series Seed VN 2024: Stable mới raised 7B, Tyme Bank 15B, Notchmeister 5B. 5B là reasonable seed round cho deep-tech AI platform.
+A: Có. Series Seed VN 2024: các case tương tự huy động 4-7B VNĐ cho deep-tech AI platform. Base và Pessimistic dùng cùng mức 5.000M vì đây là số tiền đã huy động ở Month 0 — không phụ thuộc kịch bản tương lai nào xảy ra; Optimistic dùng 4.000M vì ít cần buffer hơn.
 
-**Q: Pessimistic Runway 18-20 tháng, sao không 12?**
-A: Lab yêu cầu ≥12 tháng, chúng tôi vượt (18-20 tháng). Có buffer để Series A funding vào tháng 12-15.
+**Q: Vì sao Pessimistic Runway chỉ 15 tháng, không phải 18-20 tháng như bản nháp đầu?**
+A: Bản nháp đầu tính tay và ước lượng sai. Khi mô phỏng lại đúng công thức (New customers = TAM × Adoption, Cash tích luỹ từng tháng), với Fixed Cost giữ nguyên 430M/tháng như Base, Pessimistic thực ra cạn tiền từ tháng 3 — KHÔNG đạt Gate 3. Để đạt gate mà không nới lỏng shock Churn/CAC 1.5x, đã cắt Fixed Cost Pessimistic xuống 250M/tháng (giảm 42%, mô phỏng đội ngũ tinh gọn khi khủng hoảng) — kết quả Runway thực là 15 tháng, vượt ngưỡng 12 nhưng không dư dả, nên Decision Note khuyến nghị chốt funding bổ sung trước tháng 14.
 
 ---
 
